@@ -47,6 +47,8 @@ const init = async () => {
       token TEXT PRIMARY KEY,
       team_id INTEGER REFERENCES teams(id) ON DELETE CASCADE,
       email_hash TEXT NOT NULL,
+      email TEXT,
+      role TEXT,
       status TEXT NOT NULL,
       created_by TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT now()
@@ -71,6 +73,28 @@ const init = async () => {
       created_by TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT now()
     );
+    CREATE TABLE IF NOT EXISTS tasks (
+      id SERIAL PRIMARY KEY,
+      project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      description TEXT,
+      status TEXT NOT NULL DEFAULT 'todo',
+      assigned_to TEXT,
+      created_by TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS comments (
+      id SERIAL PRIMARY KEY,
+      task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
+      content TEXT NOT NULL,
+      created_by TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT now()
+    );
+  `);
+  // Handle migration for existing databases:
+  await pool.query(`
+    ALTER TABLE invitations ADD COLUMN IF NOT EXISTS email TEXT;
+    ALTER TABLE invitations ADD COLUMN IF NOT EXISTS role TEXT;
   `);
 };
 export const dbReady = init();
@@ -170,19 +194,19 @@ export const getMemberRole = async (teamId, userId) => {
 };
 
 // ---------- Invitations ----------
-export const createInvitation = async ({ requesterId, teamId, email }) => {
+export const createInvitation = async ({ requesterId, teamId, email, role }) => {
   const token = (await import("crypto")).randomUUID();
   const emailHash = await hashValue(email);
   await pool.query(
-    `INSERT INTO invitations (token, team_id, email_hash, status, created_by)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [token, teamId, emailHash, "pending", requesterId],
+    `INSERT INTO invitations (token, team_id, email_hash, email, role, status, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [token, teamId, emailHash, email, role || "member", "pending", requesterId],
   );
   await logAudit({
     teamId,
     action: "invite",
     performedBy: requesterId,
-    details: { emailHash, token },
+    details: { email, emailHash, token, role: role || "member" },
   });
   return token;
 };
@@ -342,6 +366,14 @@ export const updatePermissions = async ({
   return { permissions: perm.rows[0].permission_matrix };
 };
 
+export const getTeamPermissions = async (teamId) => {
+  const perm = await pool.query(
+    "SELECT permission_matrix FROM permissions WHERE team_id = $1",
+    [teamId],
+  );
+  return perm.rowCount > 0 ? perm.rows[0].permission_matrix : {};
+};
+
 // ---------- Projects ----------
 export const createProject = async ({
   requesterId,
@@ -382,6 +414,8 @@ export const listTeamMembers = async ({ teamId }) => {
 // ---------- Test Utilities ----------
 export const clearAll = async () => {
   const tables = [
+    "comments",
+    "tasks",
     "projects",
     "permissions",
     "audit_log",
@@ -403,24 +437,225 @@ export const logAudit = async ({ teamId, action, performedBy, details }) => {
   );
 };
 
+// ---------- Team Updates & Deletion ----------
+export const updateTeam = async (teamId, { name, description }) => {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+  if (name) {
+    fields.push(`name = $${idx++}`);
+    values.push(name);
+  }
+  if (description !== undefined) {
+    fields.push(`description = $${idx++}`);
+    values.push(description);
+  }
+  if (fields.length === 0) return getTeamById(teamId);
+  values.push(teamId);
+  const query = `UPDATE teams SET ${fields.join(", ")} WHERE id = $${idx} RETURNING *`;
+  const res = await pool.query(query, values);
+  return res.rows[0];
+};
+
+export const deleteTeam = async (teamId) => {
+  const res = await pool.query("DELETE FROM teams WHERE id = $1 RETURNING *", [
+    teamId,
+  ]);
+  return res.rows[0];
+};
+
+// ---------- Project Updates & Deletion ----------
+export const getProjectById = async (projectId) => {
+  const res = await pool.query("SELECT * FROM projects WHERE id = $1", [
+    projectId,
+  ]);
+  return res.rows[0];
+};
+
+export const updateProject = async (projectId, { name, description }) => {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+  if (name) {
+    fields.push(`name = $${idx++}`);
+    values.push(name);
+  }
+  if (description !== undefined) {
+    fields.push(`description = $${idx++}`);
+    values.push(description);
+  }
+  if (fields.length === 0) return getProjectById(projectId);
+  values.push(projectId);
+  const query = `UPDATE projects SET ${fields.join(", ")} WHERE id = $${idx} RETURNING *`;
+  const res = await pool.query(query, values);
+  return res.rows[0];
+};
+
+export const deleteProject = async (projectId) => {
+  const res = await pool.query(
+    "DELETE FROM projects WHERE id = $1 RETURNING *",
+    [projectId],
+  );
+  return res.rows[0];
+};
+
+// ---------- Invitations Extra ----------
+export const listInvitationsByTeam = async (teamId) => {
+  const res = await pool.query(
+    "SELECT * FROM invitations WHERE team_id = $1 ORDER BY created_at DESC",
+    [teamId],
+  );
+  return res.rows;
+};
+
+export const listAllInvitations = async () => {
+  const res = await pool.query(
+    "SELECT * FROM invitations ORDER BY created_at DESC",
+  );
+  return res.rows;
+};
+
+export const deleteInvitation = async (token) => {
+  const res = await pool.query(
+    "DELETE FROM invitations WHERE token = $1 RETURNING *",
+    [token],
+  );
+  return res.rows[0];
+};
+
+// ---------- Tasks ----------
+export const getTaskById = async (taskId) => {
+  const res = await pool.query("SELECT * FROM tasks WHERE id = $1", [taskId]);
+  return res.rows[0];
+};
+
+export const createTask = async ({
+  projectId,
+  title,
+  description = "",
+  status = "todo",
+  assignedTo = null,
+  requesterId,
+}) => {
+  const res = await pool.query(
+    `INSERT INTO tasks (project_id, title, description, status, assigned_to, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    [projectId, title, description, status, assignedTo, requesterId],
+  );
+  return res.rows[0];
+};
+
+export const listTasks = async (projectId) => {
+  const res = await pool.query(
+    "SELECT * FROM tasks WHERE project_id = $1 ORDER BY created_at DESC",
+    [projectId],
+  );
+  return res.rows;
+};
+
+export const updateTask = async (
+  taskId,
+  { title, description, status, assignedTo },
+) => {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+  if (title !== undefined) {
+    fields.push(`title = $${idx++}`);
+    values.push(title);
+  }
+  if (description !== undefined) {
+    fields.push(`description = $${idx++}`);
+    values.push(description);
+  }
+  if (status !== undefined) {
+    fields.push(`status = $${idx++}`);
+    values.push(status);
+  }
+  if (assignedTo !== undefined) {
+    fields.push(`assigned_to = $${idx++}`);
+    values.push(assignedTo);
+  }
+  if (fields.length === 0) return getTaskById(taskId);
+  values.push(taskId);
+  const query = `UPDATE tasks SET ${fields.join(", ")} WHERE id = $${idx} RETURNING *`;
+  const res = await pool.query(query, values);
+  return res.rows[0];
+};
+
+export const deleteTask = async (taskId) => {
+  const res = await pool.query("DELETE FROM tasks WHERE id = $1 RETURNING *", [
+    taskId,
+  ]);
+  return res.rows[0];
+};
+
+// ---------- Comments ----------
+export const getCommentById = async (commentId) => {
+  const res = await pool.query("SELECT * FROM comments WHERE id = $1", [
+    commentId,
+  ]);
+  return res.rows[0];
+};
+
+export const createComment = async ({ taskId, content, requesterId }) => {
+  const res = await pool.query(
+    "INSERT INTO comments (task_id, content, created_by) VALUES ($1, $2, $3) RETURNING *",
+    [taskId, content, requesterId],
+  );
+  return res.rows[0];
+};
+
+export const listComments = async (taskId) => {
+  const res = await pool.query(
+    "SELECT * FROM comments WHERE task_id = $1 ORDER BY created_at ASC",
+    [taskId],
+  );
+  return res.rows;
+};
+
+export const deleteComment = async (commentId) => {
+  const res = await pool.query(
+    "DELETE FROM comments WHERE id = $1 RETURNING *",
+    [commentId],
+  );
+  return res.rows[0];
+};
+
 export default {
   createUser,
   getUserById,
   updateUser,
   createTeam,
   getTeamById,
+  updateTeam,
+  deleteTeam,
   createInvitation,
   getInvitation,
   updateInvitationStatus,
+  listInvitationsByTeam,
+  listAllInvitations,
+  deleteInvitation,
   addMemberToTeam,
   removeMemberFromTeam,
   listUserTeams,
   assignRoleToMember,
   getAuditLog,
   updatePermissions,
+  getTeamPermissions,
   createProject,
   listProjects,
+  getProjectById,
+  updateProject,
+  deleteProject,
   listTeamMembers,
+  createTask,
+  listTasks,
+  updateTask,
+  deleteTask,
+  createComment,
+  listComments,
+  deleteComment,
   clearAll,
   hashValue,
   verifyHash,

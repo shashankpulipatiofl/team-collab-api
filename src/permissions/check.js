@@ -4,9 +4,10 @@ import { getTeamById } from "../db.js";
 
 // Role hierarchy: higher number = higher privilege
 const ROLE_RANK = {
-  owner: 3,
-  admin: 2,
-  member: 1,
+  owner: 4,
+  admin: 3,
+  member: 2,
+  viewer: 1,
 };
 
 /**

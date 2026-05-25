@@ -8,6 +8,8 @@ import { fileURLToPath } from "url";
 
 import {
   createTeam,
+  updateTeamRoute,
+  deleteTeamRoute,
   inviteMember,
   respondInvitation,
   listUserTeams,
@@ -15,10 +17,23 @@ import {
   removeMember,
   getAuditLog,
   updatePermissions,
+  getTeamPermissionsRoute,
   listRoutes,
   createProject,
   listProjects,
   listMembers,
+  updateProjectRoute,
+  deleteProjectRoute,
+  listTeamInvitations,
+  listAllInvitations,
+  deleteInvitationRoute,
+  createTaskRoute,
+  listTasksRoute,
+  updateTaskRoute,
+  deleteTaskRoute,
+  createCommentRoute,
+  listCommentsRoute,
+  deleteCommentRoute,
 } from "./routes/index.js";
 import { dbReady } from "./db.js";
 
@@ -33,11 +48,28 @@ app.use(express.static(path.join(__dirname, "../public")));
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
+// Helper to standardise responses and handle errors
+const sendResponse = (res, result, key) => {
+  if (!result) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+  if (result.error) {
+    return res.status(result.status || 500).json({ error: result.error });
+  }
+  if (key) {
+    return res.status(result.status || 200).json(result[key]);
+  }
+  return res.status(result.status || 200).json(result);
+};
+
 // ── Teams ─────────────────────────────────────────────────────────────────────
 app.post("/teams", async (req, res) => {
   try {
-    const result = await createTeam(req.body);
-    res.status(result.status).json(result.team);
+    const result = await createTeam({
+      requesterId: req.query.requesterId || req.body.requesterId,
+      ...req.body,
+    });
+    sendResponse(res, result, "team");
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -47,9 +79,10 @@ app.post("/teams/:teamId/invite", async (req, res) => {
   try {
     const result = await inviteMember({
       teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
       ...req.body,
     });
-    res.status(result.status).json({ invitationId: result.invitationId });
+    sendResponse(res, result);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -59,9 +92,10 @@ app.post("/invitations/:token/respond", async (req, res) => {
   try {
     const result = await respondInvitation({
       token: req.params.token,
+      responderId: req.query.requesterId || req.body.requesterId || req.body.responderId,
       ...req.body,
     });
-    res.status(result.status).json(result);
+    sendResponse(res, result);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -70,7 +104,7 @@ app.post("/invitations/:token/respond", async (req, res) => {
 app.get("/users/:userId/teams", async (req, res) => {
   try {
     const result = await listUserTeams({ userId: req.params.userId });
-    res.status(result.status).json(result.teams);
+    sendResponse(res, result, "teams");
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -78,8 +112,12 @@ app.get("/users/:userId/teams", async (req, res) => {
 
 app.post("/teams/:teamId/role", async (req, res) => {
   try {
-    const result = await addRole({ teamId: req.params.teamId, ...req.body });
-    res.status(result.status).json(result.member);
+    const result = await addRole({
+      teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+      ...req.body,
+    });
+    sendResponse(res, result, "member");
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -87,8 +125,12 @@ app.post("/teams/:teamId/role", async (req, res) => {
 
 app.delete("/teams/:teamId/member/:memberId", async (req, res) => {
   try {
-    const result = await removeMember({ ...req.params, ...req.body });
-    res.status(result.status).json(result.removed);
+    const result = await removeMember({
+      teamId: req.params.teamId,
+      memberId: req.params.memberId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result, "removed");
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -104,7 +146,7 @@ app.get("/teams/:teamId/audit", async (req, res) => {
       endDate,
       limit: Number(limit),
     });
-    res.status(result.status).json(result.logs);
+    sendResponse(res, result, "logs");
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -114,9 +156,22 @@ app.patch("/teams/:teamId/permissions", async (req, res) => {
   try {
     const result = await updatePermissions({
       teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
       ...req.body,
     });
-    res.status(result.status).json(result.permissions);
+    sendResponse(res, result, "permissions");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.get("/teams/:teamId/permissions", async (req, res) => {
+  try {
+    const result = await getTeamPermissionsRoute({
+      teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result, "permissions");
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -126,9 +181,10 @@ app.post("/teams/:teamId/projects", async (req, res) => {
   try {
     const result = await createProject({
       teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
       ...req.body,
     });
-    res.status(result.status).json(result.project);
+    sendResponse(res, result, "project");
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -136,8 +192,11 @@ app.post("/teams/:teamId/projects", async (req, res) => {
 
 app.get("/teams/:teamId/projects", async (req, res) => {
   try {
-    const result = await listProjects({ teamId: req.params.teamId });
-    res.status(result.status).json(result.projects);
+    const result = await listProjects({
+      teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result, "projects");
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -145,8 +204,205 @@ app.get("/teams/:teamId/projects", async (req, res) => {
 
 app.get("/teams/:teamId/members", async (req, res) => {
   try {
-    const result = await listMembers({ teamId: req.params.teamId });
-    res.status(result.status).json(result.members);
+    const result = await listMembers({
+      teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result, "members");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ── Team Update & Delete ──────────────────────────────────────────────────────
+app.patch("/teams/:teamId", async (req, res) => {
+  try {
+    const result = await updateTeamRoute({
+      teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+      ...req.body,
+    });
+    sendResponse(res, result, "team");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.delete("/teams/:teamId", async (req, res) => {
+  try {
+    const result = await deleteTeamRoute({
+      teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ── Project Update & Delete ───────────────────────────────────────────────────
+app.patch("/teams/:teamId/projects/:projectId", async (req, res) => {
+  try {
+    const result = await updateProjectRoute({
+      teamId: req.params.teamId,
+      projectId: req.params.projectId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+      ...req.body,
+    });
+    sendResponse(res, result, "project");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.delete("/teams/:teamId/projects/:projectId", async (req, res) => {
+  try {
+    const result = await deleteProjectRoute({
+      teamId: req.params.teamId,
+      projectId: req.params.projectId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ── Team Invitations Extras ───────────────────────────────────────────────────
+app.get("/teams/:teamId/invitations", async (req, res) => {
+  try {
+    const result = await listTeamInvitations({
+      teamId: req.params.teamId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result, "invitations");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.get("/invitations", async (req, res) => {
+  try {
+    const result = await listAllInvitations({
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result, "invitations");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.delete("/teams/:teamId/invitations/:token", async (req, res) => {
+  try {
+    const result = await deleteInvitationRoute({
+      teamId: req.params.teamId,
+      token: req.params.token,
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ── Tasks ─────────────────────────────────────────────────────────────────────
+app.get("/teams/:teamId/projects/:projectId/tasks", async (req, res) => {
+  try {
+    const result = await listTasksRoute({
+      teamId: req.params.teamId,
+      projectId: req.params.projectId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+    });
+    sendResponse(res, result, "tasks");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.post("/teams/:teamId/projects/:projectId/tasks", async (req, res) => {
+  try {
+    const result = await createTaskRoute({
+      teamId: req.params.teamId,
+      projectId: req.params.projectId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+      ...req.body,
+    });
+    sendResponse(res, result, "task");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.patch(
+  "/teams/:teamId/projects/:projectId/tasks/:taskId",
+  async (req, res) => {
+    try {
+      const result = await updateTaskRoute({
+        teamId: req.params.teamId,
+        projectId: req.params.projectId,
+        taskId: req.params.taskId,
+        requesterId: req.query.requesterId || req.body.requesterId,
+        ...req.body,
+      });
+      sendResponse(res, result, "task");
+    } catch (e) {
+      res.status(400).json({ error: e.message });
+    }
+  },
+);
+
+app.delete(
+  "/teams/:teamId/projects/:projectId/tasks/:taskId",
+  async (req, res) => {
+    try {
+      const result = await deleteTaskRoute({
+        teamId: req.params.teamId,
+        projectId: req.params.projectId,
+        taskId: req.params.taskId,
+        requesterId: req.query.requesterId || req.body.requesterId,
+      });
+      sendResponse(res, result);
+    } catch (e) {
+      res.status(400).json({ error: e.message });
+    }
+  },
+);
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+app.get("/tasks/:taskId/comments", async (req, res) => {
+  try {
+    const result = await listCommentsRoute({
+      taskId: req.params.taskId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+      teamId: req.query.teamId,
+    });
+    sendResponse(res, result, "comments");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.post("/tasks/:taskId/comments", async (req, res) => {
+  try {
+    const result = await createCommentRoute({
+      taskId: req.params.taskId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+      ...req.body,
+    });
+    sendResponse(res, result, "comment");
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.delete("/comments/:commentId", async (req, res) => {
+  try {
+    const result = await deleteCommentRoute({
+      commentId: req.params.commentId,
+      requesterId: req.query.requesterId || req.body.requesterId,
+      ...req.body,
+    });
+    sendResponse(res, result);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

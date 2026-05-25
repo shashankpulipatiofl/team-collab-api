@@ -72,7 +72,7 @@
               <input
                 type="text"
                 id="user-id-input"
-                class="field-input"
+                class="field-input has-icon"
                 placeholder="e.g. user-123"
                 required
                 autocomplete="off"
@@ -133,6 +133,25 @@
           </div>
         </div>
 
+        <div class="sidebar-section" style="margin-bottom: 12px">
+          <span class="section-label">Switch Identity</span>
+          <select
+            id="user-switcher"
+            class="field-input sm"
+            style="
+              background: rgba(255, 255, 255, 0.06);
+              color: var(--text-1);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 6px;
+              width: 100%;
+              cursor: pointer;
+              font-weight: 500;
+            "
+          >
+            <!-- Loaded dynamically from known users -->
+          </select>
+        </div>
+
         <div class="sidebar-section">
           <span class="section-label">Teams</span>
           <ul id="teams-list" class="team-nav"></ul>
@@ -169,6 +188,23 @@
               </button>
             </div>
           </div>
+        </div>
+
+        <div
+          class="sidebar-section"
+          style="margin-top: auto; padding-top: 10px"
+        >
+          <button
+            id="show-inbox-btn"
+            class="btn-ghost w-full"
+            style="
+              background: rgba(124, 58, 237, 0.12);
+              border: 1px solid rgba(124, 58, 237, 0.25);
+              color: #c084fc;
+            "
+          >
+            ✉ Simulated Mail Inbox
+          </button>
         </div>
 
         <div class="sidebar-footer">
@@ -252,7 +288,29 @@
                 <p class="ws-meta" id="team-description">Team workspace</p>
               </div>
             </div>
-            <div class="ws-header-right">
+            <div
+              class="ws-header-right"
+              style="display: flex; gap: 8px; align-items: center"
+            >
+              <button
+                id="show-team-settings-btn"
+                class="icon-action"
+                title="Team Settings"
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                  />
+                </svg>
+              </button>
               <button id="refresh-team-btn" class="icon-action" title="Refresh">
                 <svg
                   width="15"
@@ -268,174 +326,600 @@
               </button>
             </div>
           </header>
-
-          <!-- Dashboard Grid -->
-          <div class="ws-grid">
-            <!-- Projects -->
-            <section class="ws-panel glass" id="panel-projects">
-              <div class="panel-head">
-                <div class="panel-title-row">
-                  <div class="panel-icon purple">
+          <!-- Dashboard View (Projects + Members + Audit) -->
+          <div id="dashboard-view" class="ws-view active">
+            <div class="ws-grid">
+              <!-- Projects -->
+              <section class="ws-panel glass" id="panel-projects">
+                <div class="panel-head">
+                  <div class="panel-title-row">
+                    <div class="panel-icon purple">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        stroke-width="2.5"
+                      >
+                        <path
+                          d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 class="panel-title">Projects</h3>
+                    <span class="panel-count" id="projects-count">0</span>
+                  </div>
+                  <button id="show-create-project-btn" class="btn-accent">
                     <svg
-                      width="14"
-                      height="14"
+                      width="12"
+                      height="12"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="white"
+                      stroke="currentColor"
                       stroke-width="2.5"
                     >
-                      <path
-                        d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
-                      />
+                      <path d="M12 5v14" />
+                      <path d="M5 12h14" />
                     </svg>
-                  </div>
-                  <h3 class="panel-title">Projects</h3>
-                  <span class="panel-count" id="projects-count">0</span>
+                    New
+                  </button>
                 </div>
-                <button id="show-create-project-btn" class="btn-accent">
+                <div id="create-project-form" class="panel-inline-form hidden">
+                  <input
+                    type="text"
+                    id="new-project-name"
+                    class="field-input sm"
+                    placeholder="Project name…"
+                  />
+                  <input
+                    type="text"
+                    id="new-project-desc"
+                    class="field-input sm"
+                    placeholder="Description (optional)"
+                  />
+                  <div class="inline-form-actions">
+                    <button id="create-project-submit" class="btn-primary sm">
+                      Create Project
+                    </button>
+                    <button id="cancel-create-project" class="btn-ghost sm">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+                <div
+                  class="panel-body scrollable-y"
+                  id="projects-list"
+                  style="max-height: 350px; overflow-y: auto"
+                >
+                  <div class="skeleton-list">
+                    <div class="skeleton-item"></div>
+                    <div class="skeleton-item"></div>
+                    <div class="skeleton-item"></div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Members & Access -->
+              <section class="ws-panel glass" id="panel-members">
+                <div class="panel-head">
+                  <div class="panel-title-row">
+                    <div class="panel-icon blue">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        stroke-width="2.5"
+                      >
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                    </div>
+                    <h3 class="panel-title">Members</h3>
+                    <span class="panel-count" id="members-count">0</span>
+                  </div>
+                  <button id="show-invite-btn" class="btn-accent">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    >
+                      <path d="M12 5v14" />
+                      <path d="M5 12h14" />
+                    </svg>
+                    Invite
+                  </button>
+                </div>
+                <div id="invite-form" class="panel-inline-form hidden">
+                  <input
+                    type="email"
+                    id="invite-email"
+                    class="field-input sm"
+                    placeholder="colleague@company.com"
+                  />
+                  <select id="invite-role" class="field-input sm">
+                    <option value="viewer">Viewer — Can view</option>
+                    <option value="member">Member — Can collaborate</option>
+                    <option value="admin">Admin — Can manage</option>
+                  </select>
+                  <div class="inline-form-actions">
+                    <button id="invite-submit" class="btn-primary sm">
+                      Send Invite
+                    </button>
+                    <button id="cancel-invite" class="btn-ghost sm">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Members Tabs -->
+                <div
+                  class="panel-tabs"
+                  style="
+                    display: flex;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                    padding: 5px 15px 0 15px;
+                    gap: 10px;
+                  "
+                >
+                  <button
+                    id="btn-tab-members"
+                    class="panel-tab-btn active"
+                    style="
+                      background: none;
+                      border: none;
+                      border-bottom: 2px solid var(--blue);
+                      color: var(--text-1);
+                      font-size: 0.8rem;
+                      padding: 6px 10px;
+                      cursor: pointer;
+                      font-weight: 500;
+                    "
+                  >
+                    Active
+                  </button>
+                  <button
+                    id="btn-tab-invites"
+                    class="panel-tab-btn"
+                    style="
+                      background: none;
+                      border: none;
+                      border-bottom: 2px solid transparent;
+                      color: var(--text-3);
+                      font-size: 0.8rem;
+                      padding: 6px 10px;
+                      cursor: pointer;
+                      font-weight: 500;
+                    "
+                  >
+                    Pending Invites
+                  </button>
+                </div>
+
+                <div
+                  class="panel-body scrollable-y"
+                  id="members-list"
+                  style="max-height: 310px; overflow-y: auto"
+                >
+                  <div class="skeleton-list">
+                    <div class="skeleton-item"></div>
+                    <div class="skeleton-item"></div>
+                  </div>
+                </div>
+
+                <!-- Invitations sub-panel -->
+                <div
+                  class="panel-body scrollable-y hidden"
+                  id="invitations-list"
+                  style="max-height: 310px; overflow-y: auto"
+                >
+                  <div class="skeleton-list">
+                    <div class="skeleton-item"></div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Audit Log -->
+              <section class="ws-panel glass ws-panel-full" id="panel-audit">
+                <div class="panel-head">
+                  <div class="panel-title-row">
+                    <div class="panel-icon green">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        stroke-width="2.5"
+                      >
+                        <path
+                          d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                        />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                      </svg>
+                    </div>
+                    <h3 class="panel-title">Activity Log</h3>
+                  </div>
+                </div>
+                <div
+                  class="panel-body audit-body scrollable-y"
+                  id="audit-list"
+                  style="max-height: 300px; overflow-y: auto"
+                >
+                  <div class="skeleton-list">
+                    <div class="skeleton-item"></div>
+                    <div class="skeleton-item"></div>
+                    <div class="skeleton-item"></div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <!-- Project Tasks View (Kanban) -->
+          <div
+            id="project-view"
+            class="ws-view hidden"
+            style="padding: 15px 24px"
+          >
+            <div
+              class="project-view-header"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 18px;
+              "
+            >
+              <div>
+                <button
+                  id="back-to-dashboard-btn"
+                  class="btn-ghost sm"
+                  style="
+                    margin-bottom: 8px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 5px;
+                    padding: 4px 8px;
+                    font-weight: 500;
+                  "
+                >
                   <svg
                     width="12"
                     height="12"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2.5"
+                    stroke-width="2"
                   >
-                    <path d="M12 5v14" />
-                    <path d="M5 12h14" />
+                    <path d="M19 12H5m7-7-7 7 7 7" />
                   </svg>
-                  New
+                  Back to Dashboard
+                </button>
+                <h2
+                  id="current-project-title"
+                  style="
+                    font-size: 1.45rem;
+                    font-weight: 700;
+                    color: var(--text-1);
+                    letter-spacing: -0.3px;
+                  "
+                >
+                  Project Name
+                </h2>
+                <p
+                  id="current-project-desc"
+                  style="
+                    color: var(--text-3);
+                    font-size: 0.83rem;
+                    margin-top: 2px;
+                  "
+                >
+                  Project Description
+                </p>
+              </div>
+              <button
+                id="show-create-task-btn"
+                class="btn-accent"
+                style="
+                  height: 36px;
+                  display: flex;
+                  align-items: center;
+                  gap: 5px;
+                "
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                New Task
+              </button>
+            </div>
+
+            <!-- Inline Create Task Form -->
+            <div
+              id="create-task-form"
+              class="panel-inline-form hidden"
+              style="
+                margin-bottom: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                padding: 16px;
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.02);
+                max-width: 600px;
+              "
+            >
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 2fr 1fr;
+                  gap: 12px;
+                  margin-bottom: 12px;
+                "
+              >
+                <div class="field-group" style="margin: 0">
+                  <input
+                    type="text"
+                    id="new-task-title"
+                    class="field-input sm"
+                    placeholder="Task title..."
+                    style="width: 100%"
+                  />
+                </div>
+                <div class="field-group" style="margin: 0">
+                  <select
+                    id="new-task-assignee"
+                    class="field-input sm"
+                    style="width: 100%"
+                  >
+                    <option value="">Unassigned</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group" style="margin-bottom: 12px">
+                <textarea
+                  id="new-task-desc"
+                  class="field-input sm"
+                  placeholder="Task description (optional)..."
+                  style="
+                    height: 60px;
+                    resize: none;
+                    font-family: inherit;
+                    width: 100%;
+                    padding: 8px 10px;
+                  "
+                ></textarea>
+              </div>
+              <div class="inline-form-actions">
+                <button id="create-task-submit" class="btn-primary sm">
+                  Create Task
+                </button>
+                <button id="cancel-create-task" class="btn-ghost sm">
+                  Cancel
                 </button>
               </div>
-              <div id="create-project-form" class="panel-inline-form hidden">
-                <input
-                  type="text"
-                  id="new-project-name"
-                  class="field-input sm"
-                  placeholder="Project name…"
-                />
-                <input
-                  type="text"
-                  id="new-project-desc"
-                  class="field-input sm"
-                  placeholder="Description (optional)"
-                />
-                <div class="inline-form-actions">
-                  <button id="create-project-submit" class="btn-primary sm">
-                    Create Project
-                  </button>
-                  <button id="cancel-create-project" class="btn-ghost sm">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-              <div class="panel-body" id="projects-list">
-                <div class="skeleton-list">
-                  <div class="skeleton-item"></div>
-                  <div class="skeleton-item"></div>
-                  <div class="skeleton-item"></div>
-                </div>
-              </div>
-            </section>
+            </div>
 
-            <!-- Members -->
-            <section class="ws-panel glass" id="panel-members">
-              <div class="panel-head">
-                <div class="panel-title-row">
-                  <div class="panel-icon blue">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      stroke-width="2.5"
-                    >
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                  </div>
-                  <h3 class="panel-title">Members</h3>
-                  <span class="panel-count" id="members-count">0</span>
-                </div>
-                <button id="show-invite-btn" class="btn-accent">
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
+            <!-- Kanban Board Grid -->
+            <div
+              class="kanban-board"
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 16px;
+                min-height: 400px;
+                align-items: start;
+              "
+            >
+              <!-- To Do Column -->
+              <div
+                class="kanban-col glass"
+                id="col-todo"
+                style="
+                  background: rgba(255, 255, 255, 0.02);
+                  border: 1px solid rgba(255, 255, 255, 0.05);
+                  border-radius: 10px;
+                  padding: 12px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+                "
+              >
+                <div
+                  class="col-head"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 4px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                    padding-bottom: 8px;
+                  "
+                >
+                  <h4
+                    style="
+                      font-weight: 600;
+                      font-size: 0.8rem;
+                      color: var(--text-2);
+                      text-transform: uppercase;
+                      letter-spacing: 0.5px;
+                    "
                   >
-                    <path d="M12 5v14" />
-                    <path d="M5 12h14" />
-                  </svg>
-                  Invite
-                </button>
-              </div>
-              <div id="invite-form" class="panel-inline-form hidden">
-                <input
-                  type="email"
-                  id="invite-email"
-                  class="field-input sm"
-                  placeholder="colleague@company.com"
-                />
-                <select id="invite-role" class="field-input sm">
-                  <option value="viewer">Viewer — Can view</option>
-                  <option value="admin">Admin — Can manage</option>
-                </select>
-                <div class="inline-form-actions">
-                  <button id="invite-submit" class="btn-primary sm">
-                    Send Invite
-                  </button>
-                  <button id="cancel-invite" class="btn-ghost sm">
-                    Cancel
-                  </button>
+                    To Do
+                  </h4>
+                  <span
+                    class="col-count"
+                    id="count-todo"
+                    style="
+                      background: rgba(255, 255, 255, 0.08);
+                      color: var(--text-2);
+                      padding: 2px 6px;
+                      border-radius: 10px;
+                      font-size: 0.72rem;
+                      font-weight: 600;
+                    "
+                    >0</span
+                  >
                 </div>
+                <div
+                  class="col-body tasks-container"
+                  id="tasks-todo"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    min-height: 250px;
+                    max-height: 480px;
+                    overflow-y: auto;
+                    padding-top: 4px;
+                  "
+                ></div>
               </div>
-              <div class="panel-body" id="members-list">
-                <div class="skeleton-list">
-                  <div class="skeleton-item"></div>
-                  <div class="skeleton-item"></div>
+              <!-- In Progress Column -->
+              <div
+                class="kanban-col glass"
+                id="col-in-progress"
+                style="
+                  background: rgba(255, 255, 255, 0.02);
+                  border: 1px solid rgba(255, 255, 255, 0.05);
+                  border-radius: 10px;
+                  padding: 12px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+                "
+              >
+                <div
+                  class="col-head"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 4px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                    padding-bottom: 8px;
+                  "
+                >
+                  <h4
+                    style="
+                      font-weight: 600;
+                      font-size: 0.8rem;
+                      color: var(--text-2);
+                      text-transform: uppercase;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    In Progress
+                  </h4>
+                  <span
+                    class="col-count"
+                    id="count-in-progress"
+                    style="
+                      background: rgba(124, 58, 237, 0.15);
+                      color: #c084fc;
+                      padding: 2px 6px;
+                      border-radius: 10px;
+                      font-size: 0.72rem;
+                      font-weight: 600;
+                    "
+                    >0</span
+                  >
                 </div>
+                <div
+                  class="col-body tasks-container"
+                  id="tasks-in-progress"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    min-height: 250px;
+                    max-height: 480px;
+                    overflow-y: auto;
+                    padding-top: 4px;
+                  "
+                ></div>
               </div>
-            </section>
-
-            <!-- Audit Log -->
-            <section class="ws-panel glass ws-panel-full" id="panel-audit">
-              <div class="panel-head">
-                <div class="panel-title-row">
-                  <div class="panel-icon green">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      stroke-width="2.5"
-                    >
-                      <path
-                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                      />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                      <polyline points="10 9 9 9 8 9" />
-                    </svg>
-                  </div>
-                  <h3 class="panel-title">Activity Log</h3>
+              <!-- Done Column -->
+              <div
+                class="kanban-col glass"
+                id="col-done"
+                style="
+                  background: rgba(255, 255, 255, 0.02);
+                  border: 1px solid rgba(255, 255, 255, 0.05);
+                  border-radius: 10px;
+                  padding: 12px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+                "
+              >
+                <div
+                  class="col-head"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 4px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                    padding-bottom: 8px;
+                  "
+                >
+                  <h4
+                    style="
+                      font-weight: 600;
+                      font-size: 0.8rem;
+                      color: var(--text-2);
+                      text-transform: uppercase;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    Done
+                  </h4>
+                  <span
+                    class="col-count"
+                    id="count-done"
+                    style="
+                      background: rgba(34, 197, 94, 0.15);
+                      color: #4ade80;
+                      padding: 2px 6px;
+                      border-radius: 10px;
+                      font-size: 0.72rem;
+                      font-weight: 600;
+                    "
+                    >0</span
+                  >
                 </div>
+                <div
+                  class="col-body tasks-container"
+                  id="tasks-done"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    min-height: 250px;
+                    max-height: 480px;
+                    overflow-y: auto;
+                    padding-top: 4px;
+                  "
+                ></div>
               </div>
-              <div class="panel-body audit-body" id="audit-list">
-                <div class="skeleton-list">
-                  <div class="skeleton-item"></div>
-                  <div class="skeleton-item"></div>
-                  <div class="skeleton-item"></div>
-                </div>
-              </div>
-            </section>
+            </div>
           </div>
         </div>
       </main>
@@ -482,6 +966,551 @@
         </div>
         <div class="modal-footer">
           <button id="close-email-btn" class="btn-primary">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team Settings Modal -->
+    <div id="settings-modal" class="modal-backdrop hidden">
+      <div class="modal glass" style="max-width: 500px; width: 90%">
+        <div class="modal-header">
+          <div
+            class="modal-icon-wrap"
+            style="background: var(--purple-gradient)"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              stroke-width="2"
+            >
+              <path
+                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+              />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title">Team Settings</h3>
+            <p class="modal-subtitle">
+              Configure team workspace & custom permissions
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="modal-body-scroll"
+          style="
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-top: 15px;
+          "
+        >
+          <!-- Team details -->
+          <div class="settings-group" style="margin-bottom: 20px">
+            <h4
+              class="settings-sec-title"
+              style="
+                font-size: 0.85rem;
+                text-transform: uppercase;
+                color: var(--purple);
+                margin-bottom: 12px;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+              "
+            >
+              Details
+            </h4>
+            <div class="field-group">
+              <label class="field-label" for="settings-team-name"
+                >Team Name</label
+              >
+              <input
+                type="text"
+                id="settings-team-name"
+                class="field-input sm"
+              />
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="settings-team-desc"
+                >Description</label
+              >
+              <input
+                type="text"
+                id="settings-team-desc"
+                class="field-input sm"
+              />
+            </div>
+            <button
+              id="save-team-details-btn"
+              class="btn-primary sm"
+              style="margin-top: 5px"
+            >
+              Save Details
+            </button>
+          </div>
+
+          <hr
+            style="
+              border: 0;
+              border-top: 1px solid rgba(255, 255, 255, 0.08);
+              margin: 15px 0;
+            "
+          />
+
+          <!-- Permissions Matrix -->
+          <div class="settings-group" style="margin-bottom: 20px">
+            <h4
+              class="settings-sec-title"
+              style="
+                font-size: 0.85rem;
+                text-transform: uppercase;
+                color: var(--blue);
+                margin-bottom: 12px;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+              "
+            >
+              Custom Permissions Matrix
+            </h4>
+            <p
+              class="settings-desc"
+              style="
+                color: var(--text-3);
+                font-size: 0.78rem;
+                margin-bottom: 10px;
+              "
+            >
+              Select the minimum role required to perform actions:
+            </p>
+            <div
+              class="permission-matrix-grid"
+              style="display: grid; gap: 12px; margin-top: 10px"
+            >
+              <div
+                class="matrix-row"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span
+                  class="matrix-label"
+                  style="font-size: 0.82rem; color: var(--text-2)"
+                  >Invite Members:</span
+                >
+                <select
+                  id="matrix-invite"
+                  class="field-input sm"
+                  style="width: 130px; margin: 0"
+                >
+                  <option value="owner">Owner Only</option>
+                  <option value="admin">Admin & Owner</option>
+                  <option value="member">Anyone</option>
+                </select>
+              </div>
+              <div
+                class="matrix-row"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span
+                  class="matrix-label"
+                  style="font-size: 0.82rem; color: var(--text-2)"
+                  >Create Projects:</span
+                >
+                <select
+                  id="matrix-create-project"
+                  class="field-input sm"
+                  style="width: 130px; margin: 0"
+                >
+                  <option value="owner">Owner Only</option>
+                  <option value="admin">Admin & Owner</option>
+                  <option value="member">Anyone</option>
+                </select>
+              </div>
+              <div
+                class="matrix-row"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span
+                  class="matrix-label"
+                  style="font-size: 0.82rem; color: var(--text-2)"
+                  >Delete Projects:</span
+                >
+                <select
+                  id="matrix-delete-project"
+                  class="field-input sm"
+                  style="width: 130px; margin: 0"
+                >
+                  <option value="owner">Owner Only</option>
+                  <option value="admin">Admin & Owner</option>
+                  <option value="member">Anyone</option>
+                </select>
+              </div>
+            </div>
+            <button
+              id="save-permissions-matrix-btn"
+              class="btn-primary sm"
+              style="margin-top: 15px"
+            >
+              Update Permissions
+            </button>
+          </div>
+
+          <hr
+            style="
+              border: 0;
+              border-top: 1px solid rgba(255, 255, 255, 0.08);
+              margin: 15px 0;
+            "
+          />
+
+          <!-- Danger zone -->
+          <div
+            class="settings-group danger-zone"
+            style="
+              background: rgba(220, 38, 38, 0.05);
+              padding: 12px;
+              border-radius: 8px;
+              border: 1px solid rgba(220, 38, 38, 0.18);
+            "
+          >
+            <h4
+              class="settings-sec-title"
+              style="
+                color: #f87171;
+                margin-bottom: 4px;
+                font-weight: 600;
+                font-size: 0.85rem;
+              "
+            >
+              Danger Zone
+            </h4>
+            <p
+              class="settings-desc"
+              style="
+                color: rgba(255, 255, 255, 0.55);
+                margin-bottom: 10px;
+                font-size: 0.75rem;
+                line-height: 1.3;
+              "
+            >
+              Deleting a team will permanently remove all associated projects,
+              tasks, member records, and audit logs. This cannot be undone.
+            </p>
+            <button
+              id="delete-team-btn"
+              class="btn-danger sm"
+              style="
+                background: #dc2626;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              Delete Team
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="modal-footer"
+          style="
+            margin-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+          "
+        >
+          <button id="close-settings-btn" class="btn-ghost sm">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Details & Comments Modal -->
+    <div id="task-details-modal" class="modal-backdrop hidden">
+      <div class="modal glass" style="max-width: 550px; width: 90%">
+        <div class="modal-header">
+          <div class="modal-icon-wrap" style="background: var(--blue-gradient)">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              stroke-width="2"
+            >
+              <path d="M9 11l3 3L22 4" />
+              <path
+                d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+              />
+            </svg>
+          </div>
+          <div style="flex: 1">
+            <h3
+              class="modal-title"
+              id="detail-task-title"
+              style="font-size: 1.15rem; font-weight: 700; color: var(--text-1)"
+            >
+              Task Title
+            </h3>
+            <p
+              class="modal-subtitle"
+              id="detail-task-created"
+              style="font-size: 0.75rem; color: var(--text-3); margin-top: 2px"
+            >
+              Created by ...
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="modal-body-scroll"
+          style="
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-top: 15px;
+          "
+        >
+          <!-- Task Description -->
+          <div class="field-group" style="margin-bottom: 15px">
+            <label class="field-label">Description</label>
+            <p
+              id="detail-task-desc"
+              style="
+                color: var(--text-2);
+                font-size: 0.83rem;
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                padding: 10px;
+                border-radius: 6px;
+                min-height: 40px;
+                white-space: pre-wrap;
+                line-height: 1.4;
+              "
+            >
+              No description provided.
+            </p>
+          </div>
+
+          <!-- Edit fields -->
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 12px;
+              margin-bottom: 12px;
+            "
+          >
+            <div class="field-group" style="margin: 0">
+              <label class="field-label" for="detail-task-status">Status</label>
+              <select
+                id="detail-task-status"
+                class="field-input sm"
+                style="width: 100%"
+              >
+                <option value="todo">To Do</option>
+                <option value="in_progress">In Progress</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+            <div class="field-group" style="margin: 0">
+              <label class="field-label" for="detail-task-assignee"
+                >Assignee</label
+              >
+              <select
+                id="detail-task-assignee"
+                class="field-input sm"
+                style="width: 100%"
+              >
+                <option value="">Unassigned</option>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 15px;
+            "
+          >
+            <button id="save-task-updates-btn" class="btn-primary sm">
+              Save Task Changes
+            </button>
+            <button
+              id="delete-task-btn"
+              class="btn-ghost sm"
+              style="
+                color: #f87171;
+                border: 1px solid rgba(220, 38, 38, 0.2);
+                background: rgba(220, 38, 38, 0.02);
+              "
+            >
+              Delete Task
+            </button>
+          </div>
+
+          <hr
+            style="
+              border: 0;
+              border-top: 1px solid rgba(255, 255, 255, 0.08);
+              margin: 15px 0;
+            "
+          />
+
+          <!-- Comments section -->
+          <h4
+            class="settings-sec-title"
+            style="
+              font-size: 0.85rem;
+              text-transform: uppercase;
+              color: var(--purple);
+              margin-bottom: 12px;
+              font-weight: 600;
+              letter-spacing: 0.5px;
+            "
+          >
+            Comments
+          </h4>
+
+          <div
+            class="comments-list scrollable-y"
+            id="task-comments-list"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+              margin-bottom: 15px;
+              max-height: 160px;
+              overflow-y: auto;
+              padding-right: 3px;
+            "
+          >
+            <!-- Rendered dynamically -->
+          </div>
+
+          <div
+            class="comment-input-area"
+            style="
+              display: flex;
+              gap: 8px;
+              align-items: center;
+              margin-top: 8px;
+            "
+          >
+            <input
+              type="text"
+              id="new-comment-input"
+              class="field-input sm"
+              placeholder="Write a comment..."
+              style="flex: 1; margin: 0"
+            />
+            <button
+              id="submit-comment-btn"
+              class="btn-primary sm"
+              style="height: 32px; padding: 0 12px; margin: 0"
+            >
+              Post
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="modal-footer"
+          style="
+            margin-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+          "
+        >
+          <button id="close-task-details-btn" class="btn-ghost sm">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulated Inbox Modal -->
+    <div id="inbox-modal" class="modal-backdrop hidden">
+      <div class="modal glass" style="max-width: 500px; width: 90%">
+        <div class="modal-header">
+          <div
+            class="modal-icon-wrap"
+            style="background: var(--purple-gradient)"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              stroke-width="2"
+            >
+              <path
+                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+              />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title">Simulated Inbox</h3>
+            <p class="modal-subtitle">
+              Accept or decline pending team invitations
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="modal-body-scroll"
+          style="
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-top: 15px;
+          "
+        >
+          <div
+            id="inbox-invites-list"
+            style="display: flex; flex-direction: column; gap: 10px"
+          >
+            <!-- Loaded dynamically -->
+          </div>
+        </div>
+
+        <div
+          class="modal-footer"
+          style="
+            margin-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+          "
+        >
+          <button id="close-inbox-btn" class="btn-ghost sm">Close</button>
         </div>
       </div>
     </div>
