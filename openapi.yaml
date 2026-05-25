@@ -1,0 +1,242 @@
+openapi: 3.0.0
+info:
+  title: Team Collaboration API
+  version: 1.0.0
+  description: API for managing teams, members, projects, invitations, audit logs, and permissions.
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /teams:
+    post:
+      summary: Create a new team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requesterId, name]
+              properties:
+                requesterId:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Team created
+  /teams/{teamId}/invite:
+    post:
+      summary: Invite a member to a team
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requesterId, email]
+              properties:
+                requesterId:
+                  type: string
+                email:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '202':
+          description: Invitation created
+  /invitations/{token}/respond:
+    post:
+      summary: Accept or decline an invitation
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [responderId, decision]
+              properties:
+                responderId:
+                  type: string
+                decision:
+                  type: string
+                  enum: [accept, decline]
+      responses:
+        '200':
+          description: Invitation response processed
+  /users/{userId}/teams:
+    get:
+      summary: List teams for a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of teams
+  /teams/{teamId}/role:
+    post:
+      summary: Assign a role to a team member
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requesterId, memberId, role]
+              properties:
+                requesterId:
+                  type: string
+                memberId:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '200':
+          description: Role assigned
+  /teams/{teamId}/member/{memberId}:
+    delete:
+      summary: Remove a member from a team
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: memberId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Member removed
+  /teams/{teamId}/audit:
+    get:
+      summary: Retrieve audit logs for a team
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Audit logs
+  /teams/{teamId}/permissions:
+    patch:
+      summary: Update permissions for a team
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissions:
+                  type: object
+      responses:
+        '200':
+          description: Permissions updated
+  /teams/{teamId}/projects:
+    post:
+      summary: Create a project within a team
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Project created
+    get:
+      summary: List projects for a team
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of projects
+  /teams/{teamId}/members:
+    get:
+      summary: List members of a team
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of members
