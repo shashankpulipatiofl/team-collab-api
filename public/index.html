@@ -132,7 +132,7 @@
                 stroke-linejoin="round"
               />
             </svg>
-            <h2>Workspaces</h2>
+            <h2>Team Collab</h2>
           </div>
         </div>
         <div class="sidebar-content">
@@ -189,10 +189,11 @@
       <main class="main-content">
         <!-- Empty State -->
         <div id="empty-state" class="empty-state glass-panel active">
-          <div class="empty-icon">👈</div>
-          <h2>Select a Workspace</h2>
+          <div class="empty-icon">🏢</div>
+          <h2>Select a Team</h2>
           <p>
-            Choose a team from the sidebar or create a new one to get started.
+            Choose a team from the sidebar to view its workspace, or create a
+            new team to get started.
           </p>
         </div>
 
@@ -201,7 +202,9 @@
           <header class="team-header glass-panel">
             <div>
               <h1 id="team-title">Team Name</h1>
-              <p id="team-description" class="subtitle">Description</p>
+              <p id="team-description" class="subtitle">
+                Loading team details...
+              </p>
             </div>
             <div class="team-actions">
               <button
@@ -314,7 +317,7 @@
             <!-- Audit Logs Panel -->
             <div class="panel glass-panel full-width">
               <div class="panel-header">
-                <h3>Recent Security Audit Logs</h3>
+                <h3>📋 Activity &amp; Audit Log</h3>
               </div>
               <div class="panel-content table-container" id="audit-list">
                 <div class="loader"></div>
