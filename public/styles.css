@@ -375,7 +375,8 @@ select.field-input {
 /* ─────────────────────────────────────────────────────────────────
    LAYOUT
 ───────────────────────────────────────────────────────────────── */
-#dashboard-screen {
+/* Dashboard uses flex layout — only when the screen is active */
+#dashboard-screen.active {
   display: flex;
   gap: 0;
 }
