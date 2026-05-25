@@ -87,6 +87,31 @@ function setContent(el, html) {
   el.innerHTML = html;
 }
 
+// ── Reset workspace (called on login/logout) ────────────────────────────
+function resetWorkspace() {
+  currentTeamId = null;
+  currentTeamName = null;
+  // Hide team view, show empty state
+  el.teamView.classList.add("hidden");
+  el.emptyState.classList.remove("hidden");
+  // Clear sidebar team list
+  el.teamsList.innerHTML = "";
+  // Clear all panels
+  setContent(el.projectsList, skeletonHTML(3));
+  setContent(el.membersList, skeletonHTML(2));
+  setContent(el.auditList, skeletonHTML(3));
+  el.projectsCount.textContent = "0";
+  el.membersCount.textContent = "0";
+  // Close any open inline forms
+  el.createTeamForm.classList.add("hidden");
+  el.createProjectForm.classList.add("hidden");
+  el.inviteForm.classList.add("hidden");
+  // Remove active state from all nav items
+  document
+    .querySelectorAll(".team-nav-item")
+    .forEach((n) => n.classList.remove("active"));
+}
+
 // ── Auth ───────────────────────────────────────────────────────────────
 el.loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -95,6 +120,7 @@ el.loginForm.addEventListener("submit", async (e) => {
   currentUserId = uid;
   el.displayUserId.textContent = uid;
   el.avatarInitial.textContent = uid.charAt(0).toUpperCase();
+  resetWorkspace(); // Always start fresh for every login
   screens.login.classList.remove("active");
   screens.dashboard.classList.add("active");
   await loadTeams();
@@ -102,9 +128,9 @@ el.loginForm.addEventListener("submit", async (e) => {
 
 el.logoutBtn.addEventListener("click", () => {
   currentUserId = null;
-  currentTeamId = null;
-  currentTeamName = null;
   el.userIdInput.value = "";
+  el.newTeamName.value = "";
+  resetWorkspace(); // Wipe all data from previous session
   screens.dashboard.classList.remove("active");
   screens.login.classList.add("active");
 });
