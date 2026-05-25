@@ -1,18 +1,18 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 dotenv.config();
-import { Pool } from 'pg';
-import bcrypt from 'bcrypt';
-import { AppError } from './utils/error.js';
-import { newDb } from 'pg-mem';
+import { Pool } from "pg";
+import bcrypt from "bcrypt";
+import { AppError } from "./utils/error.js";
+import { newDb } from "pg-mem";
 
 let pool;
-if (process.env.NODE_ENV === 'test' || !process.env.DATABASE_URL) {
+if (process.env.NODE_ENV === "test" || !process.env.DATABASE_URL) {
   const db = newDb();
   const { Pool: TestPool } = db.adapters.createPg();
   pool = new TestPool();
 } else {
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL
+    connectionString: process.env.DATABASE_URL,
   });
 }
 
@@ -84,14 +84,14 @@ export const createUser = async ({ name, email, password }) => {
   const emailHash = await hashValue(email);
   const passwordHash = await hashValue(password);
   const res = await pool.query(
-    'INSERT INTO users (name_hash, email_hash, password_hash) VALUES ($1, $2, $3) RETURNING id',
-    [nameHash, emailHash, passwordHash]
+    "INSERT INTO users (name_hash, email_hash, password_hash) VALUES ($1, $2, $3) RETURNING id",
+    [nameHash, emailHash, passwordHash],
   );
   return { id: res.rows[0].id };
 };
 
 export const getUserById = async (id) => {
-  const res = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+  const res = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
   return res.rows[0];
 };
 
@@ -114,34 +114,34 @@ export const updateUser = async ({ id, name, email, password }) => {
   }
   if (fields.length === 0) return; // nothing to update
   values.push(id);
-  const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${idx}`;
+  const query = `UPDATE users SET ${fields.join(", ")} WHERE id = $${idx}`;
   await pool.query(query, values);
   return getUserById(id);
 };
 
 // ---------- Teams ----------
-export const createTeam = async ({ ownerId, name, description = '' }) => {
+export const createTeam = async ({ ownerId, name, description = "" }) => {
   const res = await pool.query(
-    'INSERT INTO teams (name, description, owner_id) VALUES ($1, $2, $3) RETURNING id',
-    [name, description, ownerId]
+    "INSERT INTO teams (name, description, owner_id) VALUES ($1, $2, $3) RETURNING id",
+    [name, description, ownerId],
   );
   const teamId = res.rows[0].id;
   // Owner becomes a member with role "owner"
   await pool.query(
-    'INSERT INTO team_members (team_id, user_id, role) VALUES ($1, $2, $3)',
-    [teamId, ownerId, 'owner']
+    "INSERT INTO team_members (team_id, user_id, role) VALUES ($1, $2, $3)",
+    [teamId, ownerId, "owner"],
   );
   await logAudit({
     teamId,
-    action: 'create',
+    action: "create",
     performedBy: ownerId,
-    details: { name, description }
+    details: { name, description },
   });
   return { id: teamId };
 };
 
 export const getTeamById = async (id) => {
-  const res = await pool.query('SELECT * FROM teams WHERE id = $1', [id]);
+  const res = await pool.query("SELECT * FROM teams WHERE id = $1", [id]);
   return res.rows[0];
 };
 
@@ -149,68 +149,73 @@ export const getTeamById = async (id) => {
 export const getMemberRole = async (teamId, userId) => {
   // First check if user is owner
   const team = await getTeamById(teamId);
-  if (team && String(team.owner_id) === String(userId)) return 'owner';
+  if (team && String(team.owner_id) === String(userId)) return "owner";
   // Look up membership
   const res = await pool.query(
-    'SELECT role FROM team_members WHERE team_id = $1 AND user_id = $2',
-    [teamId, userId]
+    "SELECT role FROM team_members WHERE team_id = $1 AND user_id = $2",
+    [teamId, userId],
   );
   if (res.rowCount === 0) return null; // not a member
   const role = res.rows[0].role;
   // Empty role string means a regular member
-  return role && role.trim() !== '' ? role : 'member';
+  return role && role.trim() !== "" ? role : "member";
 };
 
 // ---------- Invitations ----------
 export const createInvitation = async ({ requesterId, teamId, email }) => {
-  const token = (await import('crypto')).randomUUID();
+  const token = (await import("crypto")).randomUUID();
   const emailHash = await hashValue(email);
   await pool.query(
     `INSERT INTO invitations (token, team_id, email_hash, status, created_by)
      VALUES ($1, $2, $3, $4, $5)`,
-    [token, teamId, emailHash, 'pending', requesterId]
+    [token, teamId, emailHash, "pending", requesterId],
   );
   await logAudit({
     teamId,
-    action: 'invite',
+    action: "invite",
     performedBy: requesterId,
-    details: { emailHash, token }
+    details: { emailHash, token },
   });
   return token;
 };
 
 export const getInvitation = async (token) => {
-  const res = await pool.query('SELECT * FROM invitations WHERE token = $1', [token]);
+  const res = await pool.query("SELECT * FROM invitations WHERE token = $1", [
+    token,
+  ]);
   return res.rows[0];
 };
 
 export const updateInvitationStatus = async (token, status) => {
-  await pool.query('UPDATE invitations SET status = $1 WHERE token = $2', [status, token]);
+  await pool.query("UPDATE invitations SET status = $1 WHERE token = $2", [
+    status,
+    token,
+  ]);
 };
 
 // ---------- Team Members ----------
-export const addMemberToTeam = async ({ teamId, userId, role = '' }) => {
+export const addMemberToTeam = async ({ teamId, userId, role = "" }) => {
   await pool.query(
-    'INSERT INTO team_members (team_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
-    [teamId, userId, role]
+    "INSERT INTO team_members (team_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+    [teamId, userId, role],
   );
   await logAudit({
     teamId,
-    action: 'join',
+    action: "join",
     performedBy: userId,
-    details: { role }
+    details: { role },
   });
 };
 
 export const removeMemberFromTeam = async ({ teamId, memberId }) => {
   await pool.query(
-    'DELETE FROM team_members WHERE team_id = $1 AND user_id = $2',
-    [teamId, memberId]
+    "DELETE FROM team_members WHERE team_id = $1 AND user_id = $2",
+    [teamId, memberId],
   );
   await logAudit({
     teamId,
-    action: 'remove_member',
-    performedBy: memberId
+    action: "remove_member",
+    performedBy: memberId,
   });
 };
 
@@ -219,7 +224,7 @@ export const listUserTeams = async (userId) => {
     `SELECT t.* FROM teams t
      JOIN team_members m ON t.id = m.team_id
      WHERE m.user_id = $1`,
-    [userId]
+    [userId],
   );
   return res.rows;
 };
@@ -227,45 +232,57 @@ export const listUserTeams = async (userId) => {
 // ---------- Roles ----------
 export const ensureRoleExists = async ({ teamId, roleName }) => {
   const res = await pool.query(
-    'SELECT id FROM team_roles WHERE team_id = $1 AND role_name = $2',
-    [teamId, roleName]
+    "SELECT id FROM team_roles WHERE team_id = $1 AND role_name = $2",
+    [teamId, roleName],
   );
   if (res.rowCount === 0) {
     await pool.query(
-      'INSERT INTO team_roles (team_id, role_name) VALUES ($1, $2)',
-      [teamId, roleName]
+      "INSERT INTO team_roles (team_id, role_name) VALUES ($1, $2)",
+      [teamId, roleName],
     );
   }
 };
 
-export const assignRoleToMember = async ({ requesterId, teamId, memberId, role }) => {
+export const assignRoleToMember = async ({
+  requesterId,
+  teamId,
+  memberId,
+  role,
+}) => {
   const team = await getTeamById(teamId);
-  if (team.owner_id !== requesterId) throw new AppError('Only owner can modify roles', 403);
+  if (team.owner_id !== requesterId)
+    throw new AppError("Only owner can modify roles", 403);
   await ensureRoleExists({ teamId, roleName: role });
   await pool.query(
-    'UPDATE team_members SET role = $1 WHERE team_id = $2 AND user_id = $3',
-    [role, teamId, memberId]
+    "UPDATE team_members SET role = $1 WHERE team_id = $2 AND user_id = $3",
+    [role, teamId, memberId],
   );
   await logAudit({
     teamId,
-    action: 'add_role',
+    action: "add_role",
     performedBy: requesterId,
-    details: { memberId, role }
+    details: { memberId, role },
   });
   const mem = await pool.query(
-    'SELECT * FROM team_members WHERE team_id = $1 AND user_id = $2',
-    [teamId, memberId]
+    "SELECT * FROM team_members WHERE team_id = $1 AND user_id = $2",
+    [teamId, memberId],
   );
   return mem.rows[0];
 };
 
 // ---------- Audit Log ----------
-export const getAuditLog = async ({ requesterId, teamId, startDate, endDate, limit = 50 }) => {
+export const getAuditLog = async ({
+  requesterId,
+  teamId,
+  startDate,
+  endDate,
+  limit = 50,
+}) => {
   const membership = await pool.query(
-    'SELECT 1 FROM team_members WHERE team_id = $1 AND user_id = $2',
-    [teamId, requesterId]
+    "SELECT 1 FROM team_members WHERE team_id = $1 AND user_id = $2",
+    [teamId, requesterId],
   );
-  if (membership.rowCount === 0) throw new AppError('Access denied', 403);
+  if (membership.rowCount === 0) throw new AppError("Access denied", 403);
 
   let query = `SELECT * FROM audit_log WHERE team_id = $1`;
   const params = [teamId];
@@ -284,27 +301,43 @@ export const getAuditLog = async ({ requesterId, teamId, startDate, endDate, lim
 };
 
 // ---------- Permissions ----------
-export const updatePermissions = async ({ requesterId, teamId, permissionMatrix }) => {
+export const updatePermissions = async ({
+  requesterId,
+  teamId,
+  permissionMatrix,
+}) => {
   const team = await getTeamById(teamId);
-  if (String(team.owner_id) !== String(requesterId)) throw new AppError('Only owner can update permissions', 403);
+  if (String(team.owner_id) !== String(requesterId))
+    throw new AppError("Only owner can update permissions", 403);
   await pool.query(
     `INSERT INTO permissions (team_id, permission_matrix) VALUES ($1, $2)
      ON CONFLICT (team_id) DO UPDATE SET permission_matrix = EXCLUDED.permission_matrix`,
-    [teamId, permissionMatrix]
+    [teamId, permissionMatrix],
   );
   await logAudit({
     teamId,
-    action: 'update_permissions',
+    action: "update_permissions",
     performedBy: requesterId,
-    details: permissionMatrix
+    details: permissionMatrix,
   });
-  const perm = await pool.query('SELECT permission_matrix FROM permissions WHERE team_id = $1', [teamId]);
+  const perm = await pool.query(
+    "SELECT permission_matrix FROM permissions WHERE team_id = $1",
+    [teamId],
+  );
   return { permissions: perm.rows[0].permission_matrix };
 };
 
 // ---------- Test Utilities ----------
 export const clearAll = async () => {
-  const tables = ['permissions', 'audit_log', 'team_members', 'team_roles', 'invitations', 'teams', 'users'];
+  const tables = [
+    "permissions",
+    "audit_log",
+    "team_members",
+    "team_roles",
+    "invitations",
+    "teams",
+    "users",
+  ];
   for (const tbl of tables) {
     await pool.query(`TRUNCATE TABLE ${tbl} RESTART IDENTITY CASCADE`);
   }
@@ -312,8 +345,8 @@ export const clearAll = async () => {
 
 export const logAudit = async ({ teamId, action, performedBy, details }) => {
   await pool.query(
-    'INSERT INTO audit_log (team_id, action, performed_by, details) VALUES ($1, $2, $3, $4)',
-    [teamId, action, performedBy, JSON.stringify(details)]
+    "INSERT INTO audit_log (team_id, action, performed_by, details) VALUES ($1, $2, $3, $4)",
+    [teamId, action, performedBy, JSON.stringify(details)],
   );
 };
 
@@ -334,5 +367,5 @@ export default {
   updatePermissions,
   clearAll,
   hashValue,
-  verifyHash
+  verifyHash,
 };

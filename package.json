@@ -2,7 +2,7 @@
   "type": "module",
   "scripts": {
     "dev": "node src/server.js",
-    "test": "NODE_ENV=test node --test tests/*.test.js",
+    "test": "NODE_ENV=test node --test tests/**/*.test.js tests/*.test.js",
     "lint": "eslint src/**/*.js",
     "format": "prettier --write .",
     "coverage": "c8 npm test"
@@ -20,7 +20,8 @@
   "devDependencies": {
     "c8": "^9.1.0",
     "eslint": "^9.0.0",
-    "eslint-config-prettier": "^9.0.1",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-prettier": "^5.5.5",
     "pg-mem": "^3.0.14",
     "prettier": "^3.3.3"
   }

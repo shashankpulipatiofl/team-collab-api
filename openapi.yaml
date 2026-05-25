@@ -10,7 +10,7 @@ paths:
     get:
       summary: Health check
       responses:
-        '200':
+        "200":
           description: Service is healthy
           content:
             application/json:
@@ -38,7 +38,7 @@ paths:
                 description:
                   type: string
       responses:
-        '201':
+        "201":
           description: Team created
   /teams/{teamId}/invite:
     post:
@@ -64,7 +64,7 @@ paths:
                 role:
                   type: string
       responses:
-        '202':
+        "202":
           description: Invitation created
   /invitations/{token}/respond:
     post:
@@ -89,7 +89,7 @@ paths:
                   type: string
                   enum: [accept, decline]
       responses:
-        '200':
+        "200":
           description: Invitation response processed
   /users/{userId}/teams:
     get:
@@ -101,7 +101,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: List of teams
   /teams/{teamId}/role:
     post:
@@ -127,7 +127,7 @@ paths:
                 role:
                   type: string
       responses:
-        '200':
+        "200":
           description: Role assigned
   /teams/{teamId}/member/{memberId}:
     delete:
@@ -144,7 +144,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Member removed
   /teams/{teamId}/audit:
     get:
@@ -170,7 +170,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Audit logs
   /teams/{teamId}/permissions:
     patch:
@@ -191,7 +191,7 @@ paths:
                 permissions:
                   type: object
       responses:
-        '200':
+        "200":
           description: Permissions updated
   /teams/{teamId}/projects:
     post:
@@ -215,7 +215,7 @@ paths:
                 description:
                   type: string
       responses:
-        '201':
+        "201":
           description: Project created
     get:
       summary: List projects for a team
@@ -226,7 +226,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: List of projects
   /teams/{teamId}/members:
     get:
@@ -238,5 +238,5 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: List of members

@@ -1,8 +1,7 @@
-import { configs } from "eslint";
+import eslintPluginPrettier from "eslint-plugin-prettier";
 
 export default [
   {
-    ...configs.recommended,
     files: ["**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
@@ -13,10 +12,9 @@ export default [
       },
     },
     plugins: {
-      prettier: require("eslint-plugin-prettier"),
+      prettier: eslintPluginPrettier,
     },
     rules: {
-      ...configs.recommended.rules,
       "prettier/prettier": "error",
     },
   },

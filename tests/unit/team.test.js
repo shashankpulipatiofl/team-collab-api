@@ -1,12 +1,13 @@
 // tests/unit/team.test.js
-import { strict as assert } from 'assert';
-import app from '../../src/server.js';
-import { createServer } from 'http';
+import { strict as assert } from "assert";
+import { describe, it, before, after } from "node:test";
+import app from "../../src/server.js";
+import { createServer } from "http";
 
 let server;
 let port;
 
-beforeAll(async () => {
+before(async () => {
   // start server on an ephemeral port
   server = createServer(app);
   await new Promise((resolve) => {
@@ -17,28 +18,28 @@ beforeAll(async () => {
   });
 });
 
-afterAll(() => {
+after(() => {
   server.close();
 });
 
-describe('Team API', () => {
-  it('should create a team and list it for user', async () => {
+describe("Team API", () => {
+  it("should create a team and list it for user", async () => {
     const base = `http://localhost:${port}`;
     // Create team
     const createRes = await fetch(`${base}/teams`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requesterId: 'user-1', name: 'Alpha' })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requesterId: "user-1", name: "Alpha" }),
     });
-    assert.equal(createRes.status, 201, 'Create team status');
+    assert.equal(createRes.status, 201, "Create team status");
     const created = await createRes.json();
-    assert.ok(created.id, 'Team ID returned');
+    assert.ok(created.id, "Team ID returned");
 
     // List user teams
     const listRes = await fetch(`${base}/users/user-1/teams`);
-    assert.equal(listRes.status, 200, 'List teams status');
+    assert.equal(listRes.status, 200, "List teams status");
     const list = await listRes.json();
     const found = list.find((t) => t.id === created.id);
-    assert.ok(found, 'Created team appears in list');
+    assert.ok(found, "Created team appears in list");
   });
 });

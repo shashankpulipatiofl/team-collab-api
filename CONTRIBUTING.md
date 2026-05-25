@@ -14,9 +14,11 @@ We welcome contributions! Please follow these steps:
 7. Open a **Pull Request** against `main` with a concise description of your changes.
 
 ### Code Style
+
 - Use `prettier` formatting (run `npm run format` if configured).
 - Keep code lint‑free (`npm run lint`).
 
 ### Review Process
+
 - PRs will be reviewed by the repository maintainer.
 - Ensure CI passes before merging.

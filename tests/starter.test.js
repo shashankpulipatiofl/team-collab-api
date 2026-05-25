@@ -12,8 +12,7 @@ test("starter routes are visible", () => {
     "POST /teams/:teamId/role (addRole)",
     "DELETE /teams/:teamId/member/:memberId (removeMember)",
     "GET /teams/:teamId/audit (getAuditLog)",
-    "PATCH /teams/:teamId/permissions (updatePermissions)"
+    "PATCH /teams/:teamId/permissions (updatePermissions)",
   ];
   assert.deepStrictEqual(listRoutes(), expected);
 });
-
