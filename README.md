@@ -72,7 +72,7 @@ Check out the [DESIGN.md](./DESIGN.md) and [ARCHITECTURE.md](./ARCHITECTURE.md) 
    ```bash
    docker-compose up --build
    ```
-4. The API will be available at `http://localhost:3000`.
+4. The API will be available at `http://localhost:3000/docs`.
 
 ### Running Tests
 
