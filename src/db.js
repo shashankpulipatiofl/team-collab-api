@@ -194,7 +194,12 @@ export const getMemberRole = async (teamId, userId) => {
 };
 
 // ---------- Invitations ----------
-export const createInvitation = async ({ requesterId, teamId, email, role }) => {
+export const createInvitation = async ({
+  requesterId,
+  teamId,
+  email,
+  role,
+}) => {
   const token = (await import("crypto")).randomUUID();
   const emailHash = await hashValue(email);
   await pool.query(

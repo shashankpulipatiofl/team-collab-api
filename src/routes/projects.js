@@ -1,5 +1,6 @@
 // src/routes/projects.js
 import { AppError, toAppError } from "../utils/error.js";
+import { checkPermission } from "../permissions/check.js";
 import {
   createProject as dbCreateProject,
   listProjects as dbListProjects,
@@ -12,6 +13,12 @@ export const createProject = async ({
   description,
 }) => {
   try {
+    await checkPermission(
+      requesterId,
+      teamId,
+      "member",
+      "At least member role is required to create projects",
+    );
     if (!name) throw new AppError("Project name required", 400);
     const project = await dbCreateProject({
       requesterId,
@@ -28,6 +35,7 @@ export const createProject = async ({
 
 export const listProjects = async ({ requesterId, teamId }) => {
   try {
+    await checkPermission(requesterId, teamId, "viewer", "Access denied");
     const projects = await dbListProjects({ teamId });
     return { status: 200, projects };
   } catch (err) {

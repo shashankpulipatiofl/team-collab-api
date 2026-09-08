@@ -428,7 +428,11 @@ await test("edge case: viewer permissions restriction", async (t) => {
   const taskId = taskRes.task.id;
 
   // Viewer should be able to list tasks
-  const listTasksRes = await listTasksRoute({ requesterId: "u2", teamId, projectId });
+  const listTasksRes = await listTasksRoute({
+    requesterId: "u2",
+    teamId,
+    projectId,
+  });
   assert.equal(listTasksRes.status, 200);
 
   // Viewer should NOT be able to create tasks

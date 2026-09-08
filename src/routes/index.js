@@ -2,8 +2,6 @@
 import { AppError, toAppError } from "../utils/error.js";
 import {
   createUser,
-  getUserById,
-  updateUser,
   createTeam as dbCreateTeam,
   getTeamById,
   updateTeam as dbUpdateTeam,
@@ -36,7 +34,6 @@ import {
 import {
   validateEmail,
   validateName,
-  validatePassword,
   validateTeamName,
 } from "../validation/input.js";
 import { checkPermission } from "../permissions/check.js";
@@ -84,11 +81,6 @@ export const respondInvitation = async ({ token, responderId, decision }) => {
     });
     await updateInvitationStatus(token, "accepted");
     // fetch team members for response (placeholder)
-    const members = await dbGetAuditLog({
-      requesterId: responderId,
-      teamId: invitation.team_id,
-      limit: 0,
-    });
     return { status: 200, teamMembers: [{ userId: responderId }] };
   } else if (decision === "decline") {
     await updateInvitationStatus(token, "declined");
@@ -288,7 +280,7 @@ export const listTeamInvitations = async ({ requesterId, teamId }) => {
   }
 };
 
-export const listAllInvitations = async ({ requesterId }) => {
+export const listAllInvitations = async () => {
   try {
     const invitations = await dbListAllInvitations();
     return { status: 200, invitations };
@@ -361,7 +353,6 @@ export const listTasksRoute = async ({ requesterId, teamId, projectId }) => {
 export const updateTaskRoute = async ({
   requesterId,
   teamId,
-  projectId,
   taskId,
   title,
   description,
@@ -388,12 +379,7 @@ export const updateTaskRoute = async ({
   }
 };
 
-export const deleteTaskRoute = async ({
-  requesterId,
-  teamId,
-  projectId,
-  taskId,
-}) => {
+export const deleteTaskRoute = async ({ requesterId, teamId, taskId }) => {
   try {
     await checkPermission(
       requesterId,

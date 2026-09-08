@@ -91,7 +91,8 @@ app.post("/invitations/:token/respond", async (req, res) => {
   try {
     const result = await respondInvitation({
       token: req.params.token,
-      responderId: req.query.requesterId || req.body.requesterId || req.body.responderId,
+      responderId:
+        req.query.requesterId || req.body.requesterId || req.body.responderId,
       ...req.body,
     });
     sendResponse(res, result);

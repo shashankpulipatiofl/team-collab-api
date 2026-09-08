@@ -1,6 +1,5 @@
 // src/permissions/check.js
 import { AppError } from "../utils/error.js";
-import { getTeamById } from "../db.js";
 
 // Role hierarchy: higher number = higher privilege
 const ROLE_RANK = {
